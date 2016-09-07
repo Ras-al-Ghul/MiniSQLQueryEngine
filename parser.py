@@ -155,7 +155,6 @@ def linkColTable(columns, tables, database):
         else:
             print "Try Again"
             return []
-    print actionList
     return actionList
 
 def linkWhereTable(where, tables, database):
@@ -220,8 +219,7 @@ def parseString(rawString, database):
     sqlstmt = simpleSQL.parseString(rawString)
     actionList = linkColTable(sqlstmt.columns, sqlstmt.tables, database)
     whereList, andor = linkWhereTable(sqlstmt.where, sqlstmt.tables, database)
-    print whereList, andor
-    return sqlstmt.columns, sqlstmt.tables, sqlstmt.where
+    return sqlstmt.columns, sqlstmt.tables, sqlstmt.where, actionList, whereList, andor
 
 if __name__ == "__main__":
     sqlstmt = simpleSQL.parseString("select distinct(table1.B) from table1, table2;")
