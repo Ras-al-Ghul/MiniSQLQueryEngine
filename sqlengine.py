@@ -1,5 +1,6 @@
 import tables
 import parser
+import itertools
 
 def preProcess(action, database):
 	listofarrs = []
@@ -40,7 +41,7 @@ def preProcess(action, database):
 								sum = 0
 								for l in database[j].cols[k]:
 									sum += int(l)
-								temparr.append([str(float(float(sum)/len(database[j].cols[k]))),-1])
+								temparr.append([str(float(float(sum)/len(database[j].cols[k]))),0])
 			elif i[2] == 'SUM':
 				for j in range(len(database)):
 					if temptable == database[j].name:
@@ -49,7 +50,7 @@ def preProcess(action, database):
 								sum = 0
 								for l in database[j].cols[k]:
 									sum += int(l)
-								temparr.append([str(sum),-1])
+								temparr.append([str(sum),0])
 			else:#DISTINCT
 				for j in range(len(database)):
 					if temptable == database[j].name:
@@ -71,7 +72,7 @@ def preProcess(action, database):
 
 def solveWithoutWhere(action, database):
 	action, listofarrs = preProcess(action, database)
-	print action, listofarrs
+	#print action, listofarrs
 	return action, listofarrs
 
 def subSolveWhere(wherelist, val, database):
@@ -133,26 +134,147 @@ def solveWhere(wherelist, andor, database):
 	if len(wherelist) == 2:
 		secondcond = subSolveWhere(wherelist, 1, database)
 
-	print firstcond, secondcond
+	if andor:
+		for i in range(len(firstcond)):
+			for j in range(len(secondcond)):
+				if firstcond[i][0] == secondcond[j][0]:
+					firstset = set(firstcond[i][1])
+					secondset = set(secondcond[j][1])
+					temp = {}
+					if andor[0] == 'and':
+						temp = firstset & secondset
+					else:
+						temp = firstset | secondset
+					templist = (list(temp))
+					templist.sort()
+					listofrows.append([firstcond[i][0], templist])
+
+	for i in range(len(firstcond)):
+		flag = 0
+		for j in range(len(listofrows)):
+			if firstcond[i][0] == listofrows[j][0]:
+				flag = 1
+				break
+		if flag == 0:
+			listofrows.append(firstcond[i])
+
+	for i in range(len(secondcond)):
+		flag = 0
+		for j in range(len(listofrows)):
+			if secondcond[i][0] == listofrows[j][0]:
+				flag = 1
+				break
+		if flag == 0:
+			listofrows.append(secondcond[i])
+
+	#print firstcond, secondcond
+	#print listofrows
+	return listofrows
+
+def findIndex(lists, key):
+	for r in range(len(lists)):
+		if lists[r]  == key:
+			return r
+
+def finalizeRows(action, listofarrs, listofrows, database):
+	#In listofarrs
+	tempset = set()
+	finalrows = []
+	for i in range(len(action)):
+		if action[i][0] not in tempset:
+			tempset.add(action[i][0])
+	finalrows = []
+	for i in tempset:
+		finalrows.append([i,set(range(0,1000))])
+
+	finalrows.sort()
+
+	for i in range(len(action)):
+		curtable = action[i][0]
+		curcolumn = action[i][1]
+		collist = listofarrs[i] 
+		tempset = set([x[1] for x in collist])
+		for j in range(len(finalrows)):
+			if finalrows[j][0] == curtable:
+				finalrows[j][1] = finalrows[j][1] & tempset
+
+	#In listofrows
+	for i in range(len(listofrows)):
+		curtable = listofrows[i][0]
+		tempset = set(listofrows[i][1])
+		for j in range(len(finalrows)):
+			if finalrows[j][0] == curtable:
+				finalrows[j][1] = finalrows[j][1] & tempset
+	
+	for i in range(len(finalrows)):
+		finalrows[i][1] = list(finalrows[i][1])
+		finalrows[i][1].sort()
+	print finalrows
+
+	finaltable = []
+	for i in range(len(finalrows)):
+		curcol = finalrows[i][1]
+		finaltable.append([])
+		for j in curcol:
+			finaltable[i].append([])
+
+	for i in range(len(finalrows)):
+		curtable = finalrows[i][0]
+		curlist = finalrows[i][1]
+		for j in range(len(action)):
+			if action[j][0] == curtable:
+				templist = listofarrs[j]
+				for k in range(len(templist)):
+					if templist[k][1] in curlist:
+						finaltable[i][findIndex(curlist, templist[k][1])].append(templist[k][0])
+	print finaltable
+
+	crossproduct = []
+	header = []
+	for i in range(len(action)):
+		header.append(action[i][1])
+	crossproduct.append(header)
+
+	if len(finaltable) == 2:
+		for i in range(len(finaltable[0])):
+			for j in range(len(finaltable[1])):
+				templists = []
+				for ii in finaltable[0][i]:
+					templists.append(ii)
+				for ii in finaltable[1][j]:
+					templists.append(ii)
+				crossproduct.append(templists)
+	else:
+		for i in range(len(finaltable[0])):
+			crossproduct.append(finaltable[0][i])
+
+	for i in crossproduct:
+		for j in i:
+			print j,
+		print
+	return finaltable
 
 def startLoop(database):
 	while 1:
 		listofarrs = []
+		listofrows = []
 		inputStr = raw_input(">")
 		if inputStr == 'q' or inputStr == 'Q':
 			break
 		else:
 			try:
 				columns, tables, where, action, wherelist, andor = parser.parseString(inputStr, database)
-				print action
-				print wherelist, andor
 				if not action and not wherelist:
 					continue
 				if not wherelist:
 					action, listofarrs = solveWithoutWhere(action, database)
 				elif wherelist:
 					action, listofarrs = solveWithoutWhere(action, database)
-					solveWhere(wherelist, andor, database)
+					listofrows = solveWhere(wherelist, andor, database)
+				print action, "\n", wherelist, "\n", andor, "\n"
+				print listofarrs, "\n", listofrows, "\n"
+				finalizeRows(action, listofarrs, listofrows, database)
+				#finalaction(listofarrs, listofrows)
 				#print columns, tables, where
 			except Exception, e:
 				print e
