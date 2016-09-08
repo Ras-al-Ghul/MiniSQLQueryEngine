@@ -172,7 +172,7 @@ def linkWhereTable(where, tables, database):
                 if j == 1:
                     continue
                 elif temparr[j].find('.') == -1:
-                    if temparr[j].isdigit():
+                    if temparr[j].isdigit() or temparr[j][:1] == '-':
                         temp.append([temparr[j]])
                     else:
                         tempcol = temparr[j]

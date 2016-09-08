@@ -27,10 +27,11 @@ def getPathToDir():
 	dirpath = raw_input(">")
 	if dirpath == "Q" or dirpath == "q":
 		sys.exit()
-	elif not os.path.isdir(dirpath):
+	#elif not os.path.isdir(dirpath):
 		print "Invalid path"
 		return getPathToDir()
 	else:
+		dirpath = '/root/Desktop/Assignment1'
 		return dirpath
 
 def getCSVFiles(path):
@@ -99,7 +100,9 @@ def createDatabase():
 	return database
 
 def main():
-	createDatabase()
+	database = createDatabase()
+	for i in range(len(database)):
+		print database[i].__dict__
 
 if __name__ == '__main__':
 	main()
