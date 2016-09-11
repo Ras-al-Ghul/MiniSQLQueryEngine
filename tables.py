@@ -27,12 +27,10 @@ def getPathToDir():
 	dirpath = raw_input(">")
 	if dirpath == "Q" or dirpath == "q":
 		sys.exit()
-	#elif not os.path.isdir(dirpath):
+	elif not os.path.isdir(dirpath):
 		print "Invalid path"
 		return getPathToDir()
-	else:
-		dirpath = '/root/Desktop/Assignment1'
-		return dirpath
+	return dirpath
 
 def getCSVFiles(path):
 	files = []

@@ -2,6 +2,7 @@ import tables
 import parser
 import itertools
 import copy
+from terminaltables import AsciiTable
 
 def preProcess(action, database, listofrows = []):
 	listofarrs = []
@@ -174,7 +175,6 @@ def preProcess(action, database, listofrows = []):
 
 def solveWithoutWhere(action, database, listofrows = []):
 	action, listofarrs = preProcess(action, database, listofrows)
-	#print action, listofarrs
 	return action, listofarrs
 
 def subSolveWhere(wherelist, val, database):
@@ -332,8 +332,6 @@ def solveWhere(wherelist, andor, database):
 	if len(wherelist) == 2:
 		secondcond = subSolveWhere(wherelist, 1, database)
 
-	print firstcond, secondcond, "cond"
-
 	if andor:
 		for i in range(len(firstcond)):
 			for j in range(len(secondcond)):
@@ -348,8 +346,6 @@ def solveWhere(wherelist, andor, database):
 					templist = (list(temp))
 					templist.sort()
 					listofrows.append([firstcond[i][0], templist])
-
-	print listofrows
 
 	for i in range(len(firstcond)):
 		flag = 0
@@ -369,14 +365,11 @@ def solveWhere(wherelist, andor, database):
 		if flag == 0:
 			listofrows.append(secondcond[i])
 
-	print listofrows
 	listofrows = furtherSolve(listofrows, wherelist, 0, database, andor)
 
 	if len(wherelist) == 2:
 		listofrows = furtherSolve(listofrows, wherelist, 1, database, andor)
 
-	#print firstcond, secondcond
-	#print listofrows
 	return listofrows
 
 def findIndex(lists, key):
@@ -405,19 +398,10 @@ def finalizeRows(action, listofarrs, listofrows, database, tempaction):
 		for j in range(len(finalrows)):
 			if finalrows[j][0] == curtable:
 				finalrows[j][1] = finalrows[j][1] & tempset
-
-	#In listofrows
-	# for i in range(len(listofrows)):
-	# 	curtable = listofrows[i][0]
-	# 	tempset = set(listofrows[i][1])
-	# 	for j in range(len(finalrows)):
-	# 		if finalrows[j][0] == curtable:
-	# 			finalrows[j][1] = finalrows[j][1] & tempset
 	
 	for i in range(len(finalrows)):
 		finalrows[i][1] = list(finalrows[i][1])
 		finalrows[i][1].sort()
-	print finalrows
 
 	finaltable = []
 	for i in range(len(finalrows)):
@@ -435,16 +419,15 @@ def finalizeRows(action, listofarrs, listofrows, database, tempaction):
 				for k in range(len(templist)):
 					if templist[k][1] in curlist:
 						finaltable[i][findIndex(curlist, templist[k][1])].append(templist[k][0])
-	print finaltable, "finaltable"
 
 	crossproduct = []
 	header = []
 	for i in range(len(tempaction)):
 		if len(tempaction[i]) == 3:
-			tempheader = tempaction[i][2] + '(' + tempaction[i][1] + ')'
+			tempheader = tempaction[i][2] + '(' + tempaction[i][0] + '.' + tempaction[i][1] + ')'
 			header.append(tempheader)
 		else:
-			header.append(tempaction[i][1])
+			header.append(tempaction[i][0] + '.' + tempaction[i][1])
 	crossproduct.append(header)
 
 	if len(finaltable) == 2:
@@ -460,11 +443,12 @@ def finalizeRows(action, listofarrs, listofrows, database, tempaction):
 		for i in range(len(finaltable[0])):
 			crossproduct.append(finaltable[0][i])
 
-	for i in crossproduct:
-		for j in i:
-			print j,
+	if len(crossproduct) != 1:
+		table = AsciiTable(crossproduct)
+		print table.table
+	else:
 		print
-	return finaltable
+	return table
 
 def startLoop(database):
 	while 1:
@@ -476,8 +460,6 @@ def startLoop(database):
 		else:
 			try:
 				columns, tables, where, action, wherelist, andor = parser.parseString(inputStr, database)
-				print columns, tables, where, wherelist
-				print
 				tempaction = copy.deepcopy(action)
 				if not action and not wherelist:
 					continue
@@ -486,11 +468,7 @@ def startLoop(database):
 				elif wherelist:
 					listofrows = solveWhere(wherelist, andor, database)
 					action, listofarrs = solveWithoutWhere(action, database, listofrows)
-				print "A action wherelist andor", action, "\n", wherelist, "\n", andor, "\n"
-				print "B listofarrs listofrows", listofarrs, "\n", listofrows, "\n"
 				finalizeRows(action, listofarrs, listofrows, database, tempaction)
-				#finalaction(listofarrs, listofrows)
-				#print columns, tables, where
 			except Exception, e:
 				print e
 				continue

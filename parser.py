@@ -224,6 +224,3 @@ def parseString(rawString, database):
 if __name__ == "__main__":
     sqlstmt = simpleSQL.parseString("select distinct(table1.B) from table1, table2;")
     print sqlstmt.columns, sqlstmt.tables, sqlstmt.where
-    # simpleSQL.runTests("""\
-    #     # multiple tables
-    #     SELECT * from XYZZY, ABC""")
