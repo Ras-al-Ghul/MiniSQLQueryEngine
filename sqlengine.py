@@ -377,6 +377,25 @@ def findIndex(lists, key):
 		if lists[r]  == key:
 			return r
 
+def appendCrossProduct(crossproduct, finaltable, level, templists):
+	if level == 1:
+		for i in finaltable[len(finaltable) - level]:
+			for j in i:
+				templists.append(j)
+			crossproduct.append(copy.deepcopy(templists))
+			for j in i:
+				templists.pop()
+		return crossproduct, templists
+
+	for i in finaltable[len(finaltable) - level]:
+		for j in i:
+			templists.append(j)
+		crossproduct, templists = appendCrossProduct(crossproduct, finaltable, level - 1, templists)
+		for j in i:
+			templists.pop()
+	return crossproduct, templists
+
+
 def finalizeRows(action, listofarrs, listofrows, database, tempaction):
 	#In listofarrs
 	tempset = set()
@@ -430,19 +449,9 @@ def finalizeRows(action, listofarrs, listofrows, database, tempaction):
 			header.append(tempaction[i][0] + '.' + tempaction[i][1])
 	crossproduct.append(header)
 
-	if len(finaltable) == 2:
-		for i in range(len(finaltable[0])):
-			for j in range(len(finaltable[1])):
-				templists = []
-				for ii in finaltable[0][i]:
-					templists.append(ii)
-				for ii in finaltable[1][j]:
-					templists.append(ii)
-				crossproduct.append(templists)
-	else:
-		for i in range(len(finaltable[0])):
-			crossproduct.append(finaltable[0][i])
+	crossproduct, templists = appendCrossProduct(crossproduct, finaltable, len(finaltable), [])
 
+	table = []
 	if len(crossproduct) != 1:
 		table = AsciiTable(crossproduct)
 		print table.table
