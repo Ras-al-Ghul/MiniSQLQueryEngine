@@ -396,7 +396,7 @@ def appendCrossProduct(crossproduct, finaltable, level, templists):
 	return crossproduct, templists
 
 
-def finalizeRows(action, listofarrs, listofrows, database, tempaction):
+def finalizeRows(action, listofarrs, listofrows, database, tempaction, wherelist):
 	#In listofarrs
 	tempset = set()
 	finalrows = []
@@ -439,6 +439,11 @@ def finalizeRows(action, listofarrs, listofrows, database, tempaction):
 					if templist[k][1] in curlist:
 						finaltable[i][findIndex(curlist, templist[k][1])].append(templist[k][0])
 
+	wherecrosspflag = True
+	for i in range(len(wherelist)):
+		if len(wherelist[i][0]) == 2 and len(wherelist[i][1]) == 2:
+			wherecrosspflag = False
+
 	crossproduct = []
 	header = []
 	for i in range(len(tempaction)):
@@ -449,7 +454,15 @@ def finalizeRows(action, listofarrs, listofrows, database, tempaction):
 			header.append(tempaction[i][0] + '.' + tempaction[i][1])
 	crossproduct.append(header)
 
-	crossproduct, templists = appendCrossProduct(crossproduct, finaltable, len(finaltable), [])
+	if wherecrosspflag:
+		crossproduct, templists = appendCrossProduct(crossproduct, finaltable, len(finaltable), [])
+	else:
+		for i in range (len(finaltable[0])):
+			crossproduct.append([])
+		for i in range(len(finaltable)):
+			for j in range(len(finaltable[i])):
+				for k in range(len(finaltable[i][j])):
+					crossproduct[j+1].append(finaltable[i][j][k])
 
 	table = []
 	if len(crossproduct) != 1:
@@ -476,8 +489,10 @@ def startLoop(database):
 					action, listofarrs = solveWithoutWhere(action, database)
 				elif wherelist:
 					listofrows = solveWhere(wherelist, andor, database)
+					if not listofrows:
+						continue
 					action, listofarrs = solveWithoutWhere(action, database, listofrows)
-				finalizeRows(action, listofarrs, listofrows, database, tempaction)
+				finalizeRows(action, listofarrs, listofrows, database, tempaction, wherelist)
 			except Exception, e:
 				print e
 				continue

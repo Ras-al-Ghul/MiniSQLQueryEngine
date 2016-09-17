@@ -37,6 +37,8 @@ intNum = Combine( Optional(arithSign) + Word( nums ) +
 
 columnRval = realNum | intNum | quotedString | columnName # need to add support for alg expressions
 whereCondition = Group(
+    ( columnRval + binop + columnName ) |
+    ( columnRval + binop + columnRval ) |
     ( columnName + binop + columnRval ) |
     ( columnName + in_ + "(" + delimitedList( columnRval ) + ")" ) |
     ( columnName + in_ + "(" + selectStmt + ")" ) |
