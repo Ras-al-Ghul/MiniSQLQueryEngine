@@ -8,14 +8,14 @@ To run,
 
 **NOTE -** The main objective was to get all the test cases passing, and the deadline was soon upon us. Hence the coding style has been very bad and there's no documentation.
 
-# Files
+### Files
 
 - `sqlengine.py` The main file which performs all the processing  
 - `parser.py` pyparsing has been used for this `http://pyparsing.wikispaces.com/`  
 - `tables.py` File to read in the tables from the specified directory  
 - `table1.py`, `table2.py`, `metadata.txt` The database files (Only int values in csv)  
 
-# Types of queries handled
+### Types of queries handled
 - Select all records : `Select * from table_name;`
 - Aggregate functions: Simple aggregate functions on a single column. Sum, average, max and min. They will be very trivial given that the data is only numbers: `select max(col1) from table1;` 
 - Project Columns(could be any number of columns) from one or more tables : `Select col1, col2 from table_name;`
